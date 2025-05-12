@@ -13,21 +13,21 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
   ) {}
 
-  findAll(getAllProductDto: GetAllProductDto) {
-    const { name, priceSubunitGte, priceSubunitLte } = getAllProductDto;
+  findAll(getAllProductDto: GetAllProductDto): Promise<Product[]> {
+    const { name, price_subunit: priceSubunit } = getAllProductDto;
     const queryBuilder: SelectQueryBuilder<Product> = 
       this.productsRepository.createQueryBuilder('product');
     if (name) {
       queryBuilder.andWhere('product.name = :name', { name: name });
     }
-    if (priceSubunitGte) {
+    if (priceSubunit.gte) {
       queryBuilder.andWhere('product.priceSubunit >= :priceSubunit', { 
-        priceSubunit: priceSubunitGte 
+        priceSubunit: priceSubunit.gte
       });
     }
-    if (priceSubunitLte) {
+    if (priceSubunit.lte) {
       queryBuilder.andWhere('product.priceSubunit <= :priceSubunit', { 
-        priceSubunit: priceSubunitLte 
+        priceSubunit: priceSubunit.lte 
       });
     }
     return queryBuilder.getMany();

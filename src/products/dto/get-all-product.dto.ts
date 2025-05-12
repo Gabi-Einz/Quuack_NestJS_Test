@@ -1,6 +1,6 @@
+import { PriceSubunit } from './price-subunit.dto';
+
 export class GetAllProductDto {
   name?: string;
-  priceSubunitGte?: number;
-  priceSubunitLte?: number;
-
+  price_subunit?: PriceSubunit;
 }
