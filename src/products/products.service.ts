@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { Repository } from 'typeorm';
+import { Between, Repository, SelectQueryBuilder } from 'typeorm';
 import { Product } from './entities/product.entity';
+import { GetAllProductDto } from './dto/get-all-product.dto';
 
 @Injectable()
 export class ProductsService {
@@ -12,8 +13,25 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
   ) {}
 
-  findAll() {
-    return this.productsRepository.find();
+  findAll(getAllProductDto: GetAllProductDto) {
+    const { name, priceSubunitGte, priceSubunitLte } = getAllProductDto;
+    const queryBuilder: SelectQueryBuilder<Product> = 
+      this.productsRepository.createQueryBuilder('product');
+    if (name) {
+      queryBuilder.andWhere('product.name = :name', { name: name });
+    }
+    if (priceSubunitGte) {
+      queryBuilder.andWhere('product.priceSubunit >= :priceSubunit', { 
+        priceSubunit: priceSubunitGte 
+      });
+    }
+    if (priceSubunitLte) {
+      queryBuilder.andWhere('product.priceSubunit <= :priceSubunit', { 
+        priceSubunit: priceSubunitLte 
+      });
+    }
+    return queryBuilder.getMany();
+
   }
 
   findOne(id: number) {
