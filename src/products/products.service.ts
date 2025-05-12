@@ -15,19 +15,21 @@ export class ProductsService {
 
   findAll(getAllProductDto: GetAllProductDto): Promise<Product[]> {
     const { name, price_subunit: priceSubunit } = getAllProductDto;
+    const priceSubunitGte = priceSubunit ? priceSubunit.gte : null; 
+    const priceSubunitLte = priceSubunit ? priceSubunit.lte : null; 
     const queryBuilder: SelectQueryBuilder<Product> = 
       this.productsRepository.createQueryBuilder('product');
     if (name) {
       queryBuilder.andWhere('product.name = :name', { name: name });
     }
-    if (priceSubunit.gte) {
+    if (priceSubunitGte) {
       queryBuilder.andWhere('product.priceSubunit >= :priceSubunit', { 
-        priceSubunit: priceSubunit.gte
+        priceSubunit: priceSubunitGte
       });
     }
-    if (priceSubunit.lte) {
+    if (priceSubunitLte) {
       queryBuilder.andWhere('product.priceSubunit <= :priceSubunit', { 
-        priceSubunit: priceSubunit.lte 
+        priceSubunit: priceSubunitLte 
       });
     }
     return queryBuilder.getMany();

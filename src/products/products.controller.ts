@@ -29,7 +29,6 @@ export class ProductsController {
    *
    * Example: /products?name=Something&price_subunit[gte]=10&price_subunit[lte]=100
    */
-
   @Get()
   index(@Query() getAllProductDto: GetAllProductDto) {
     return this.productsService.findAll(getAllProductDto);
