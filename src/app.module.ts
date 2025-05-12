@@ -5,6 +5,7 @@ import { dataSourceConfig } from '../config/data-source';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CurrentUserModule } from './current-user/current-user.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { CurrentUserModule } from './current-user/current-user.module';
     UsersModule,
     CurrentUserModule,
     ProductsModule,
+    CategoriesModule,
   ],
 })
 export class AppModule {}

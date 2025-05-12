@@ -5,11 +5,12 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { Product } from '../src/products/entities/product.entity';
 import { User } from '../src/users/entities/user.entity';
+import { Category } from '../src/categories/entities/category.entity';
 
 export const dataSourceConfig: TypeOrmModuleOptions = {
   type: 'better-sqlite3',
   database: `db/database_${process.env.NODE_ENV}.sqlite`,
-  entities: [User, Product],
+  entities: [User, Product, Category],
   migrations: ['build/src/db/migrations/*.js'],
   namingStrategy: new SnakeNamingStrategy(),
   synchronize: process.env.NODE_ENV === 'test',

@@ -4,9 +4,12 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Exclude, Expose } from 'class-transformer';
 import { Money } from '../../utils/money';
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity()
 export class Product {
@@ -37,4 +40,20 @@ export class Product {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @ManyToMany(() => Category, (category) => category.products, { 
+    cascade: true 
+  })
+  @JoinTable({
+    name: 'product_category',
+    joinColumn: {
+      name: 'product_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'category_id',
+      referencedColumnName: 'id',
+    },
+  })
+  categories: Category[];
 }
