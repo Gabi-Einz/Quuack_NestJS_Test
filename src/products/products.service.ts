@@ -8,6 +8,9 @@ import { GetAllProductDto } from './dto/get-all-product.dto';
 import { Category } from '../categories/entities/category.entity';
 import { CategoriesService } from '../categories/categories.service';
 import { User } from '../users/entities/user.entity';
+import { NamingUtils } from '../utils/naming.utils';
+import { OperatorEnum } from '../utils/enums/operator.enum';
+import { DataTypeEnum } from '../utils/enums/data-type.enum';
 
 @Injectable()
 export class ProductsService {
@@ -17,28 +20,61 @@ export class ProductsService {
     private readonly categoriesService: CategoriesService,
   ) {}
 
-  findAll(getAllProductDto: GetAllProductDto, userId: number): Promise<Product[]> {
-    const { name, price_subunit: priceSubunit } = getAllProductDto;
-    const priceSubunitGte = priceSubunit ? priceSubunit.gte : null; 
-    const priceSubunitLte = priceSubunit ? priceSubunit.lte : null; 
+  findAll(
+    getAllProductDto: GetAllProductDto,
+    userId: number
+  ): Promise<Product[]> {
+    const conditions = this.buildConditions(getAllProductDto);
     const queryBuilder: SelectQueryBuilder<Product> = this.productsRepository
       .createQueryBuilder('product')
       .where('product.user.id = :userId', { userId: userId });
-    if (name) {
-      queryBuilder.andWhere('product.name = :name', { name: name });
-    }
-    if (priceSubunitGte) {
-      queryBuilder.andWhere('product.priceSubunit >= :priceSubunit', { 
-        priceSubunit: priceSubunitGte
-      });
-    }
-    if (priceSubunitLte) {
-      queryBuilder.andWhere('product.priceSubunit <= :priceSubunit', { 
-        priceSubunit: priceSubunitLte 
-      });
-    }
-    return queryBuilder.getMany();
 
+    conditions.forEach((condition) => {
+      queryBuilder.andWhere(condition.condition, condition.value);
+    });
+    return queryBuilder.getMany();
+  }
+
+  buildConditions = (getAllProductDto: GetAllProductDto) => {
+    const fields = Object.entries(getAllProductDto).map(([key, value]) => ({ 
+      key: NamingUtils.snakeCaseToCamelCase(key),
+      value
+    }));
+    const tableName = this.productsRepository.metadata.tableName;
+    const conditions = [];
+    fields.forEach((field) => {
+      if (typeof field.value === DataTypeEnum.STRING) {
+        conditions.push({ 
+          condition: `${tableName}.${field.key} = :${field.key}`,
+          value: { [field.key]: field.value } 
+        });
+      }
+      if (typeof field.value === DataTypeEnum.OBJECT) {
+        conditions.push(...this.buildSpecialConditions(field));
+      }
+    });
+    return conditions;
+  }
+
+  buildSpecialConditions = (field) => {
+    const tableName = this.productsRepository.metadata.tableName;
+    const operators = Object.keys(field.value);
+    const specialConditions = [];
+    operators.forEach((operator) => {
+      if (operator === OperatorEnum.GTE) {
+        specialConditions.push({
+          condition: `${tableName}.${field.key} >= :${field.key}Gte`,
+          value: { [`${field.key}Gte`]: field.value[operator] }
+        });
+      }
+      if (operator === OperatorEnum.LTE) {
+        specialConditions.push({
+          condition: `${tableName}.${field.key} <= :${field.key}Lte`,
+          value: { [`${field.key}Lte`]: field.value[operator] }
+        });
+      }
+    })
+    return specialConditions;
   }
 
   async findOne(id: number, userId: number) {
