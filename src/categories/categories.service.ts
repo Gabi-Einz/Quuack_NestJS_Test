@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 
@@ -19,5 +19,11 @@ export class CategoriesService {
 
   create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     return this.categoriesRepository.save(createCategoryDto);
+  }
+
+  findByCategoryIds(categoryIds: number[]): Promise<Category[]> {
+    return this.categoriesRepository.findBy({ 
+      id: In(categoryIds) 
+    });
   }
 }
