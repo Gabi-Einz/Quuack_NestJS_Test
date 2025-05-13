@@ -11,6 +11,8 @@ import { User } from '../users/entities/user.entity';
 import { NamingUtils } from '../utils/naming.utils';
 import { OperatorEnum } from '../utils/enums/operator.enum';
 import { DataTypeEnum } from '../utils/enums/data-type.enum';
+import { Condition } from '../utils/interfaces/condition.interface';
+import { SpecialParameter } from '../utils/interfaces/special-parameter.interface';
 
 @Injectable()
 export class ProductsService {
@@ -35,13 +37,13 @@ export class ProductsService {
     return queryBuilder.getMany();
   }
 
-  buildConditions = (getAllProductDto: GetAllProductDto) => {
+  buildConditions = (getAllProductDto: GetAllProductDto): Condition[] => {
     const fields = Object.entries(getAllProductDto).map(([key, value]) => ({ 
       key: NamingUtils.snakeCaseToCamelCase(key),
       value
     }));
     const tableName = this.productsRepository.metadata.tableName;
-    const conditions = [];
+    const conditions: Condition[] = [];
     fields.forEach((field) => {
       if (typeof field.value === DataTypeEnum.STRING) {
         conditions.push({ 
@@ -56,10 +58,10 @@ export class ProductsService {
     return conditions;
   }
 
-  buildSpecialConditions = (field) => {
-    const tableName = this.productsRepository.metadata.tableName;
-    const operators = Object.keys(field.value);
-    const specialConditions = [];
+  buildSpecialConditions = (field: SpecialParameter): Condition[] => {
+    const tableName: string = this.productsRepository.metadata.tableName;
+    const operators: string[] = Object.keys(field.value);
+    const specialConditions: Condition[] = [];
     operators.forEach((operator) => {
       if (operator === OperatorEnum.GTE) {
         specialConditions.push({
@@ -100,16 +102,16 @@ export class ProductsService {
         categoryIds
       );
     }
-    const existingCategoryIds: number[] = product.categories.map(
-      (category) => category.id
-    );
-    const uniqueCategories: Category[] = [
-      ...product.categories,
-      ...newCategories.filter(
-        (newCategory) => !existingCategoryIds.includes(newCategory.id)
-      ),
-    ];
-    product.categories = uniqueCategories;
+    // const existingCategoryIds: number[] = product.categories.map(
+    //   (category) => category.id
+    // );
+    // const uniqueCategories: Category[] = [
+    //   ...product.categories,
+    //   ...newCategories.filter(
+    //     (newCategory) => !existingCategoryIds.includes(newCategory.id)
+    //   ),
+    // ];
+    product.categories = newCategories;
     return this.productsRepository.save({ ...product, ...rest });
   }
 
