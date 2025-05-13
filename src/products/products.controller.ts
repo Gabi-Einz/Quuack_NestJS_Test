@@ -15,6 +15,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetAllProductDto } from './dto/get-all-product.dto';
+import { CurrentUser } from '../auth/auth.decorator';
 
 @ApiTags('Products')
 @ApiBearerAuth()
@@ -23,45 +24,35 @@ import { GetAllProductDto } from './dto/get-all-product.dto';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  /*
-   * TODO: Add ability to filter by name to this controller action.
-   * TODO: Add ability to filter by price to this controller action. Support "greater than or equal" and "lesser than or equal".
-   *
-   * Example: /products?name=Something&price_subunit[gte]=10&price_subunit[lte]=100
-   */
   @Get()
-  index(@Query() getAllProductDto: GetAllProductDto) {
-    return this.productsService.findAll(getAllProductDto);
+  index(@Query() getAllProductDto: GetAllProductDto, @CurrentUser() user) {
+    return this.productsService.findAll(getAllProductDto, user.id);
   }
 
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productsService.create(createProductDto);
+  create(@Body() createProductDto: CreateProductDto, @CurrentUser() user) {
+    return this.productsService.create(createProductDto, user);
   }
 
   @Get(':id')
-  show(@Param('id') id: number) {
-    return this.productsService.findOne(+id);
+  async show(@Param('id') id: number, @CurrentUser() user) {
+    return await this.productsService.findOne(+id, user.id);
   }
-
-  /*
-   * TODO: Add the Category entity and create a Many-To-Many association to Products.
-   * TODO: Add ability to link Products to Categories.
-   */
 
   @Patch(':id')
   async update(
     @Param('id') id: number,
     @Body() updateProductDto: UpdateProductDto,
+    @CurrentUser() user,
   ) {
-    const product = await this.productsService.findOne(id);
+    const product = await this.productsService.findOne(id, user.id);
 
     return this.productsService.update(product, updateProductDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: number) {
-    const product = await this.productsService.findOne(id);
+  async remove(@Param('id') id: number, @CurrentUser() user) {
+    const product = await this.productsService.findOne(id, user.id);
 
     return this.productsService.remove(product);
   }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -7,6 +7,7 @@ import { Product } from './entities/product.entity';
 import { GetAllProductDto } from './dto/get-all-product.dto';
 import { Category } from '../categories/entities/category.entity';
 import { CategoriesService } from '../categories/categories.service';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class ProductsService {
@@ -16,12 +17,13 @@ export class ProductsService {
     private readonly categoriesService: CategoriesService,
   ) {}
 
-  findAll(getAllProductDto: GetAllProductDto): Promise<Product[]> {
+  findAll(getAllProductDto: GetAllProductDto, userId: number): Promise<Product[]> {
     const { name, price_subunit: priceSubunit } = getAllProductDto;
     const priceSubunitGte = priceSubunit ? priceSubunit.gte : null; 
     const priceSubunitLte = priceSubunit ? priceSubunit.lte : null; 
-    const queryBuilder: SelectQueryBuilder<Product> = 
-      this.productsRepository.createQueryBuilder('product');
+    const queryBuilder: SelectQueryBuilder<Product> = this.productsRepository
+      .createQueryBuilder('product')
+      .where('product.user.id = :userId', { userId: userId });
     if (name) {
       queryBuilder.andWhere('product.name = :name', { name: name });
     }
@@ -39,15 +41,19 @@ export class ProductsService {
 
   }
 
-  findOne(id: number) {
-    return this.productsRepository.findOne({ 
-      where: { id: id }, 
+  async findOne(id: number, userId: number) {
+    const product: Product = await this.productsRepository.findOne({ 
+      where: { id: id, user: { id: userId } }, 
       relations: ['categories'] 
     });
+    if (!product) {
+      throw new NotFoundException();
+    }
+    return product;
   }
 
-  create(createProductDto: CreateProductDto) {
-    return this.productsRepository.save(createProductDto);
+  create(createProductDto: CreateProductDto, user: User) {
+    return this.productsRepository.save({ ...createProductDto, user });
   }
 
   async update(product: Product, updateProductDto: UpdateProductDto) {

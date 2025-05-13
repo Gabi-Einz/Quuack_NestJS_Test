@@ -6,10 +6,12 @@ import {
   UpdateDateColumn,
   ManyToMany,
   JoinTable,
+  ManyToOne,
 } from 'typeorm';
 import { Exclude, Expose } from 'class-transformer';
 import { Money } from '../../utils/money';
 import { Category } from '../../categories/entities/category.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class Product {
@@ -40,6 +42,9 @@ export class Product {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @ManyToOne(() => User, (user) => user.products, { onDelete: 'CASCADE' })
+  user: User;
 
   @ManyToMany(() => Category, (category) => category.products, { 
     cascade: true 
