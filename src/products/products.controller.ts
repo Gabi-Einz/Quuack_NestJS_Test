@@ -8,6 +8,8 @@ import {
   Delete,
   UseGuards,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -25,6 +27,7 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   index(@Query() getAllProductDto: GetAllProductDto, @CurrentUser() user) {
     return this.productsService.findAll(getAllProductDto, user.id);
   }
